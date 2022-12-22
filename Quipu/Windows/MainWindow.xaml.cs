@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -8,7 +10,9 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Documents;
+using System.Windows.Media;
 using Microsoft.Win32;
 using Quipu.Code.Models;
 using Quipu.Code.Services;
@@ -21,9 +25,9 @@ using Quipu.Code.Services;
 
 
 
-//∙             Приложение должно поддерживать запуск и отмену операции подсчёта количества тэгов
 
-//∙             Приложение должно оставаться отзывчивым во время работы. Оно должно каким-либо способом показывать пользователю о том, что процесс выполняется
+
+
 
 //∙             Приложение должно каким-либо образом визуально выделить тот Url, по которому было насчитано наибольшее количество тэгов
 namespace Quipu;
@@ -32,37 +36,57 @@ namespace Quipu;
 /// </summary>
 public partial class MainWindow : Window
 {
-    private CancellationToken _token = new CancellationToken();
+    private CancellationTokenSource _token = new CancellationTokenSource();
     private ObservableCollection<UrlTagModel> models = new();
     public MainWindow()
     {
         InitializeComponent();
+        CancelCountingButton.IsEnabled = false;
+        countingProgressBar.Visibility = Visibility.Hidden;
     }
-    private void CancelCountingButton_Click()
-    private async Task ChooseFileButton_Click(Object sender, EventArgs e)
+    private void CancelCountingButton_Click(Object senser, RoutedEventArgs e)
     {
+        _token.Cancel();
+    }
+
+    private async void ChooseFileButton_Click(Object sender, RoutedEventArgs e)
+    {
+        CancelCountingButton.IsEnabled = true;
+        models.Clear();
+        urlsList.ItemsSource= models;
         var filetext = await ChooseFileAsync();
         var splittedText = await new SeparatorsSplitService().Parse(filetext);
-        await LoadHtmlPage(splittedText, _token);
         Task[] tasks = new Task[splittedText.Length];
+
         for (Int32 i = 0; i < splittedText.Length; i++)
         {
-
+            LoadHtmlPage(splittedText[i]);
             var content = await new HttpClient().GetStringAsync(splittedText[i]);
+            countingProgressBar.Visibility = Visibility.Visible;
             tasks[i] = Task.Factory.StartNew(async () =>
 
-            models.Add(new UrlTagModel(splittedText[i], "<a>", await TagCount("<a>", content, _token))), _token);
+            models.Add(new UrlTagModel(splittedText[i], "<a>", await TagCount("<a", content, _token.Token))), _token.Token);
         }
-        Task.WaitAll(tasks);
+        try
+        {
+
+            await Task.WhenAll(tasks);
+        }
+        catch (OperationCanceledException)
+        {
+            MessageBox.Show("Внимание", "Подсчёт остановлен.", button: MessageBoxButton.OK);
+        }
+
         urlsList.ItemsSource = models.OrderByDescending(i => i.TagCount);
-        
+        CancelCountingButton.IsEnabled = false;
+        countingProgressBar.Visibility = Visibility.Hidden;
     }
 
     private async Task<Int32> TagCount(String tag, String pageContent, CancellationToken token)
-        => await Task.Run(() => Regex.Matches(pageContent, tag).Count);
+        => await Task.Run(() => Regex.Matches(pageContent, tag).Count, token);
 
     /// <summary>
-    /// Calls dialog window to choose directory to scan
+    /// Calls dialog window to choose file to read
     /// </summary>
     private async Task<String> ChooseFileAsync()
     {
@@ -71,12 +95,6 @@ public partial class MainWindow : Window
             return await File.ReadAllTextAsync(folderBrowserDialog.FileName);
         else return String.Empty;
     }
-    private async Task LoadHtmlPage(String[] url, CancellationToken token)
-    {
-        Task[] tasks = new Task[url.Length];
-        for (Int32 i = 0; i < url.Length; i++)
-            tasks[i] = Task.Factory.StartNew(() => System.Diagnostics.Process.Start(url[i]));
-
-        await Task.WhenAll(tasks);
-    }
+    private async Task LoadHtmlPage(String url)
+        => await Task.Run(() => Process.Start(new ProcessStartInfo(url) { UseShellExecute = true }));
 }

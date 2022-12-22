@@ -6,8 +6,13 @@
         xmlns:local="clr-namespace:Quipu"
         mc:Ignorable="d"
         Title="Quipu" Height="450" Width="800">
+    
     <Grid>
-        <ListBox x:Name="urlsList" />
-
+        <ListBox x:Name="urlsList" >
+            
+        </ListBox>
+        <Button x:Name="ChooseFileButton" Content="Open" Height="49" Width="68" Click="ChooseFileButton_Click" Margin="268,279,464,106"/>
+        <Button x:Name="CancelCountingButton" Content="Cancel" Height="49" Width="68" Margin="366,279,366,106" Click="CancelCountingButton_Click"/>
+        <ProgressBar x:Name="countingProgressBar" Height="10" Width="100" Margin="489,318,211,106" IsIndeterminate="True"/>
     </Grid>
 </Window>

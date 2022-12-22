@@ -17,4 +17,9 @@ public class UrlTagModel
     public String Url => _url;
     public String Tag => _tag;
     public Int32 TagCount => _tagCount;
+
+    public override String? ToString()
+    {
+        return $"{_url} || {_tag} || {_tagCount}";
+    }
 }

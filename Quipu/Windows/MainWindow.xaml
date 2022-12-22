@@ -5,14 +5,37 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Quipu"
         mc:Ignorable="d"
-        Title="Quipu" Height="450" Width="800">
-    
+        Title="Quipu" Height="491" Width="821" MinWidth="821" MinHeight="491">
+
     <Grid>
-        <ListBox x:Name="urlsList" >
-            
+
+        <ListBox x:Name="urlsList" Margin="0,0,194,16" >
+            <ListBox.ItemContainerStyle>
+                <Style TargetType="{x:Type ListBoxItem}">
+                    <Setter Property="Background" Value="LightSteelBlue"/>
+                    <Setter Property="Margin" Value="5"/>
+                    <Setter Property="Padding" Value="5"/>
+                    <Style.Triggers>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter Property="Foreground" Value="White"/>
+                            <Setter Property="BorderThickness" Value="1"/>
+                            <Setter Property="BorderBrush" Value="Black"/>
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </ListBox.ItemContainerStyle>
         </ListBox>
-        <Button x:Name="ChooseFileButton" Content="Open" Height="49" Width="68" Click="ChooseFileButton_Click" Margin="268,279,464,106"/>
-        <Button x:Name="CancelCountingButton" Content="Cancel" Height="49" Width="68" Margin="366,279,366,106" Click="CancelCountingButton_Click"/>
-        <ProgressBar x:Name="countingProgressBar" Height="10" Width="100" Margin="489,318,211,106" IsIndeterminate="True"/>
+        <Button x:Name="ChooseFileButton" Content="Open" Click="ChooseFileButton_Click" Margin="513,401,105,16" Background="#FFB9FDFF" BorderBrush="Black" Foreground="Black" FontFamily="Segoe UI Semibold" FontSize="14" VerticalContentAlignment="Center"  MinWidth="75" MinHeight="23" MaxWidth="75" MaxHeight="26" HorizontalContentAlignment="Center" HorizontalAlignment="Right" VerticalAlignment="Bottom" UseLayoutRounding="True"/>
+        <Button x:Name="CancelCountingButton" Content="Cancel" Margin="600,401,18,16" Click="CancelCountingButton_Click" Background="#FFFFC8C8" BorderBrush="Black" FontFamily="Segoe UI Semibold" FontSize="14" MinWidth="75" MinHeight="23" MaxWidth="75" MaxHeight="23" HorizontalAlignment="Right" VerticalAlignment="Bottom" />
+        <ProgressBar x:Name="countingProgressBar" Margin="0,0,18,56" IsIndeterminate="True" Background="#FFD5FEFF" BorderBrush="Black" Foreground="#FF83FF99" HorizontalAlignment="Right" VerticalAlignment="Bottom" Height="19" RenderTransformOrigin="0.5,0.5" Width="162" MinWidth="162" MinHeight="19" MaxWidth="162" MaxHeight="19">
+            <ProgressBar.RenderTransform>
+                <TransformGroup>
+                    <ScaleTransform ScaleY="-1"/>
+                    <SkewTransform/>
+                    <RotateTransform/>
+                    <TranslateTransform/>
+                </TransformGroup>
+            </ProgressBar.RenderTransform>
+        </ProgressBar>
     </Grid>
 </Window>

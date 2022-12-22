@@ -6,6 +6,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Reflection.Metadata;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,20 +17,7 @@ using System.Windows.Media;
 using Microsoft.Win32;
 using Quipu.Code.Models;
 using Quipu.Code.Services;
-//Необходимо разработать клиентское приложение, которое:
 
-
-
-
-//Обязательные требования:
-
-
-
-
-
-
-
-//∙             Приложение должно каким-либо образом визуально выделить тот Url, по которому было насчитано наибольшее количество тэгов
 namespace Quipu;
 /// <summary>
 /// Interaction logic for MainWindow.xaml
@@ -37,7 +25,7 @@ namespace Quipu;
 public partial class MainWindow : Window
 {
     private CancellationTokenSource _token = new CancellationTokenSource();
-    private ObservableCollection<UrlTagModel> models = new();
+    private List<UrlTagModel> models = new();
     public MainWindow()
     {
         InitializeComponent();
@@ -53,23 +41,28 @@ public partial class MainWindow : Window
     {
         CancelCountingButton.IsEnabled = true;
         models.Clear();
-        urlsList.ItemsSource= models;
+        urlsList.ItemsSource = models;
         var filetext = await ChooseFileAsync();
         var splittedText = await new SeparatorsSplitService().Parse(filetext);
-        Task[] tasks = new Task[splittedText.Length];
+        List<Task> tasks = new();
 
         for (Int32 i = 0; i < splittedText.Length; i++)
         {
-            LoadHtmlPage(splittedText[i]);
+            if (_token.Token.IsCancellationRequested)
+                break;
+
+            //LoadHtmlPage(splittedText[i]);
             var content = await new HttpClient().GetStringAsync(splittedText[i]);
             countingProgressBar.Visibility = Visibility.Visible;
-            tasks[i] = Task.Factory.StartNew(async () =>
 
-            models.Add(new UrlTagModel(splittedText[i], "<a>", await TagCount("<a", content, _token.Token))), _token.Token);
+            var url = splittedText[i];
+            var curentIndex = i;
+            var con = content;
+
+            tasks.Add(Task.Run(async () => models.Add(new(url, "<a>", await TagCount("<a", con, _token.Token)))));
         }
         try
         {
-
             await Task.WhenAll(tasks);
         }
         catch (OperationCanceledException)
@@ -78,6 +71,7 @@ public partial class MainWindow : Window
         }
 
         urlsList.ItemsSource = models.OrderByDescending(i => i.TagCount);
+
         CancelCountingButton.IsEnabled = false;
         countingProgressBar.Visibility = Visibility.Hidden;
     }
